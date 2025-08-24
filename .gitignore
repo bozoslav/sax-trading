@@ -1,3 +1,32 @@
+# Build folders
+/exchange-backend/CMakeFiles/
+/exchange-backend/CMakeCache.txt
+/exchange-backend/Makefile
+/exchange-backend/cmake_install.cmake
+/exchange-backend/exchange-backend
+/exchange-backend/*.o
+/exchange-backend/*.obj
+/exchange-backend/*.exe
+/exchange-backend/*.out
+/exchange-backend/*.a
+/exchange-backend/*.so
+/exchange-backend/*.dylib
+/exchange-backend/build/
+
+# VS Code settings
+/.vscode/
+
+# macOS
+.DS_Store
+
+# Node modules
+/sax-trading/node_modules/
+
+# Logs
+*.log
+
+# Env files
+.env
 # Prerequisites
 *.d
 
@@ -39,3 +68,25 @@
 
 # debug information files
 *.dwo
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
