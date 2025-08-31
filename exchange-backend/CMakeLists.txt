@@ -1,3 +1,5 @@
+	# Add include directory for project and third-party headers
+	include_directories(${CMAKE_SOURCE_DIR}/include)
 cmake_minimum_required(VERSION 3.10)
 
 project(exchange-backend)
@@ -16,6 +18,6 @@ pkg_check_modules(LIBPQXX REQUIRED libpqxx)
 include_directories(${Boost_INCLUDE_DIRS} ${LIBPQXX_INCLUDE_DIRS})
 link_directories(${LIBPQXX_LIBRARY_DIRS})
 
-add_executable(exchange-backend main.cpp)
+add_executable(exchange-backend main.cpp http_server.cpp)
 
 target_link_libraries(exchange-backend ${Boost_LIBRARIES} ${LIBPQXX_LIBRARIES} pq pqxx pthread)
