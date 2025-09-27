@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { AppBar, Toolbar, Typography, Container, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Container, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Divider } from '@mui/material';
+import StocksTable from './StocksTable';
 
 const columns = [
 	{ id: 'side', label: 'Side' },
@@ -45,7 +46,7 @@ export default function HomePage() {
 				</Typography>
 				<Paper sx={{ bgcolor: '#222531' }}>
 					<TableContainer>
-						<Table>
+						<Table size="small">
 							<TableHead>
 								<TableRow>
 									{columns.map(col => (
@@ -87,6 +88,10 @@ export default function HomePage() {
 						</Table>
 					</TableContainer>
 				</Paper>
+
+				<Divider sx={{ my: 6, bgcolor: '#333' }} />
+
+				<StocksTable />
 			</Container>
 		</Box>
 	);
