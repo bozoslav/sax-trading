@@ -28,7 +28,8 @@ namespace
     std::atomic<bool> stocks_stop{false};
     int refresh_seconds = 60; // default
     std::string symbols_cfg = "AAPL,MSFT,TSLA,AMZN,GOOG";
-    std::string stocks_provider = "STOOQ"; // options: STOOQ, YAHOO
+    std::string stocks_provider = "STOOQ";             // options: STOOQ, YAHOO, TRADING212
+    std::string scraper_url = "http://localhost:9000"; // for TRADING212 provider
 
     std::string to_upper(std::string s)
     {
@@ -286,6 +287,53 @@ namespace
             }
             return ordered;
         }
+        // TRADING212 provider (calls local scraper service)
+        if (provider == "TRADING212")
+        {
+            std::cerr << "[trading212] calling scraper at " << scraper_url << std::endl;
+            // Parse scraper_url to get host and port
+            std::string scraper_host = "localhost";
+            std::string scraper_port = "9000";
+            std::string scraper_path = "/quotes?symbols=" + symbols_cfg;
+
+            // Simple URL parsing (assumes http://host:port format)
+            if (scraper_url.rfind("http://", 0) == 0)
+            {
+                std::string without_proto = scraper_url.substr(7);
+                auto colon_pos = without_proto.find(':');
+                if (colon_pos != std::string::npos)
+                {
+                    scraper_host = without_proto.substr(0, colon_pos);
+                    scraper_port = without_proto.substr(colon_pos + 1);
+                }
+                else
+                {
+                    scraper_host = without_proto;
+                }
+            }
+
+            boost::asio::io_context ioc_api;
+            tcp::resolver resolver{ioc_api};
+            auto endpoints = resolver.resolve(scraper_host, scraper_port);
+            tcp::socket sock{ioc_api};
+            boost::asio::connect(sock, endpoints.begin(), endpoints.end());
+            http::request<http::string_body> req_api{http::verb::get, scraper_path, 11};
+            req_api.set(http::field::host, scraper_host + ":" + scraper_port);
+            req_api.set(http::field::user_agent, "exchange-backend/1.0");
+            http::write(sock, req_api);
+            boost::beast::flat_buffer buffer_api;
+            http::response<http::string_body> res_api;
+            http::read(sock, buffer_api, res_api);
+
+            if (res_api.result() != http::status::ok)
+            {
+                throw std::runtime_error("scraper_upstream=" + std::to_string(static_cast<int>(res_api.result())));
+            }
+
+            auto scraper_json = nlohmann::json::parse(res_api.body());
+            std::cerr << "[trading212] received " << scraper_json.size() << " symbols from scraper" << std::endl;
+            return scraper_json;
+        }
         // Default / YAHOO provider (original logic)
         std::string host = "query1.finance.yahoo.com";
         const std::string alt_host = "query2.finance.yahoo.com";
@@ -440,10 +488,14 @@ void run_http_server(unsigned short port)
     if (const char *envP = std::getenv("STOCKS_PROVIDER"))
     {
         std::string val = to_upper(envP);
-        if (val == "STOOQ" || val == "YAHOO")
+        if (val == "STOOQ" || val == "YAHOO" || val == "TRADING212")
             stocks_provider = val;
         else
             std::cerr << "[stocks] unknown provider '" << val << "' defaulting to " << stocks_provider << "\n";
+    }
+    if (const char *envU = std::getenv("SCRAPER_URL"))
+    {
+        scraper_url = envU;
     }
     std::thread bg(stocks_background_loop);
     bg.detach();
